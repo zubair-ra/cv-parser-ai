@@ -1,7 +1,7 @@
 {
-  "name": "@your-company/cv-parser",
+  "name": "@zubair-ra/cv-parser-ai",
   "version": "1.0.0",
-  "description": "AI-powered CV/Resume parser with flexible schema support",
+  "description": "AI-powered CV/Resume parser with multi-provider support (Gemini, OpenAI, Claude)",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
@@ -12,35 +12,50 @@
   "scripts": {
     "build": "babel src --out-dir lib --copy-files",
     "test": "jest",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "dev": "node test/test.js",
+    "clean": "rm -rf lib"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-company/cv-parser.git"
+    "url": "git+https://github.com/zubair-ra/cv-parser-ai.git"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
-    "@your-company:registry": "https://npm.pkg.github.com"
+    "@zubair-ra:registry": "https://npm.pkg.github.com"
   },
   "keywords": [
     "cv-parser",
-    "resume",
-    "ai",
+    "resume-parser", 
+    "ai-parser",
+    "pdf-parser",
+    "docx-parser",
+    "gemini",
+    "openai",
+    "claude",
+    "ats",
+    "hr-tech",
+    "resume-extraction",
     "parsing",
-    "extraction"
+    "ai",
+    "machine-learning"
   ],
   "dependencies": {
     "@google/generative-ai": "^0.7.1",
-    "dotenv": "^17.2.1",
     "joi": "^17.13.3",
     "mammoth": "^1.10.0",
     "pdf-parse": "^1.1.1"
+  },
+  "optionalDependencies": {
+    "openai": "^4.0.0",
+    "@anthropic-ai/sdk": "^0.20.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.0",
     "@babel/core": "^7.28.0",
     "@babel/preset-env": "^7.28.0",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "dotenv": "^17.2.1"
   },
   "peerDependencies": {
     "node": ">=14"
@@ -49,10 +64,14 @@
     "lib": "lib",
     "test": "test"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Zubair <your-email@example.com>",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/your-company/cv-parser/issues"
+    "url": "https://github.com/zubair-ra/cv-parser-ai/issues"
   },
-  "homepage": "https://github.com/your-company/cv-parser#readme"
+  "homepage": "https://github.com/zubair-ra/cv-parser-ai#readme",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  }
 }
