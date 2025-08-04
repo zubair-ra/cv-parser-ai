@@ -1,5 +1,9 @@
 # 🤖 cv-parser-ai-tb
 
+[![npm version](https://badge.fury.io/js/cv-parser-ai-tb.svg)](https://badge.fury.io/js/cv-parser-ai-tb)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
+
 An AI-powered library to parse CVs and extract structured information such as name, email, skills, and more.
 
 ## ✨ Features
