@@ -1,7 +1,7 @@
 # 🤖 cv-parser-ai-tb
 
 [![npm version](https://badge.fury.io/js/cv-parser-ai-tb.svg)](https://badge.fury.io/js/cv-parser-ai-tb)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
 An AI-powered library to parse CVs and extract structured information such as name, email, skills, and more.
@@ -379,21 +379,3 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Google AI for providing free Gemini API access
-- The open-source community for inspiration and support
-- Contributors who help improve this library
-
-
-- 📧 Email: support@example.com
-- 🐛 Issues: [GitHub Issues](https://github.com/zubair-ra/cv-parser-ai/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/zubair-ra/cv-parser-ai/discussions)
-
----
-
-Made with ❤️ by [Zubair RA](https://github.com/zubair-ra)
