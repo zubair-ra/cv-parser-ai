@@ -1,6 +1,6 @@
 {
-  "name": "cv-parser-ai-zubair",
-  "version": "1.0.1",
+  "name": "cv-parser-ai-tb",
+  "version": "1.0.2",
   "description": "AI-powered CV/Resume parser with multi-provider support (Gemini, OpenAI, Claude)",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
