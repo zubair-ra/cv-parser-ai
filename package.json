@@ -1,5 +1,5 @@
 {
-  "name": "@zubair-ra/cv-parser-ai",
+  "name": "cv-parser-ai-zubair",
   "version": "1.0.0",
   "description": "AI-powered CV/Resume parser with multi-provider support (Gemini, OpenAI, Claude)",
   "main": "lib/index.js",
@@ -21,8 +21,7 @@
     "url": "git+https://github.com/zubair-ra/cv-parser-ai.git"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "@zubair-ra:registry": "https://npm.pkg.github.com"
+    "access": "public"
   },
   "keywords": [
     "cv-parser",
@@ -38,7 +37,9 @@
     "resume-extraction",
     "parsing",
     "ai",
-    "machine-learning"
+    "machine-learning",
+    "nodejs",
+    "npm-package"
   ],
   "dependencies": {
     "@google/generative-ai": "^0.7.1",
@@ -64,7 +65,7 @@
     "lib": "lib",
     "test": "test"
   },
-  "author": "Zubair <your-email@example.com>",
+  "author": "Zubair Ra <zubair.dev@example.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/zubair-ra/cv-parser-ai/issues"
