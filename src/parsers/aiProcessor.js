@@ -11,8 +11,6 @@ class AIProcessor {
     this.model = options.model;
     this.options = options;
     
-    console.log('Initializing AI Processor with Provider:', this.provider);
-    console.log('Using API Key:', apiKey);
     
     // Initialize the selected provider
     this.initializeProvider();
