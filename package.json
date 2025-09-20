@@ -1,15 +1,14 @@
 {
   "name": "cv-parser-ai-tb",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "AI-powered CV/Resume parser with multi-provider support (Gemini, OpenAI, Claude)",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
- "files": [
-  "lib/",
-  "README.md",
-  "LICENSE"
-],
-
+  "files": [
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "babel src --out-dir lib --copy-files",
     "test": "jest",
@@ -26,7 +25,7 @@
   },
   "keywords": [
     "cv-parser",
-    "resume-parser", 
+    "resume-parser",
     "ai-parser",
     "pdf-parser",
     "docx-parser",
