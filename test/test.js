@@ -11,7 +11,7 @@ async function test() {
         });
 
     try {
-        const result = await parser.parse('D:\\resume.pdf');
+        const result = await parser.parse(process.env.TEST_CV_PATH || 'path/to/your/cv.pdf');
       
         console.log(JSON.stringify(result, null, 2));
     } catch (error) {

@@ -49,6 +49,7 @@ class CVParser {
       confidenceThreshold: options.confidenceThreshold || 0.5,
       retryOnFailure: options.retryOnFailure !== false,
       maxRetries: options.maxRetries || 2,
+      parsingLevel: options.parsingLevel || 'moderate', // New parsing level option
       ...options
     };
 
@@ -234,7 +235,9 @@ class CVParser {
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
 
-        const aiResult = await this.aiProcessor.processWithSchema(text, this.schema);
+        // For backward compatibility, only use parsing level if explicitly set
+        const level = options.parsingLevel || (this.options.parsingLevel !== 'moderate' ? this.options.parsingLevel : null);
+        const aiResult = await this.aiProcessor.processWithSchema(text, this.schema, level);
         
         if (aiResult.success) {
           if (attempt > 0) {
@@ -435,6 +438,7 @@ class CVParser {
       provider: this.provider,
       model: this.aiProcessor.model,
       availableProviders: AIProcessor.getAvailableProviders(),
+      parsingLevels: AIProcessor.getParsingLevels(),
       schema: this.schema.getRequiredFields(),
       options: this.options
     };
@@ -445,6 +449,13 @@ class CVParser {
    */
   static getAvailableProviders() {
     return AIProcessor.getAvailableProviders();
+  }
+
+  /**
+   * Static method to get parsing levels
+   */
+  static getParsingLevels() {
+    return AIProcessor.getParsingLevels();
   }
 
   /**
@@ -497,7 +508,39 @@ class CVParser {
       includeMetadata: true,
       normalizeData: true
     });
-    
+
+    return await parser.parse(filePath);
+  }
+
+  /**
+   * Static method for fast parsing with low parsing level
+   */
+  static async fastParse(filePath, apiKey, provider = 'groq') {
+    const parser = new CVParser({
+      apiKey,
+      provider,
+      parsingLevel: 'low',
+      includeMetadata: false,
+      includeKeywords: false,
+      normalizeData: false
+    });
+
+    return await parser.parse(filePath);
+  }
+
+  /**
+   * Static method for detailed parsing with high level
+   */
+  static async detailedParse(filePath, apiKey, provider = 'gemini') {
+    const parser = new CVParser({
+      apiKey,
+      provider,
+      parsingLevel: 'high',
+      includeMetadata: true,
+      normalizeData: true,
+      validateData: true
+    });
+
     return await parser.parse(filePath);
   }
 }
