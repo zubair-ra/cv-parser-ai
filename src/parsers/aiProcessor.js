@@ -43,9 +43,15 @@ class AIProcessor {
         // Initialize Anthropic client when available
         this.initializeClaude();
         break;
-        
+
+      case 'groq':
+        this.model = this.model || 'llama3-8b-8192';
+        console.log('Using Groq Model:', this.model);
+        this.initializeGroq();
+        break;
+
       default:
-        throw new Error(`Unsupported AI provider: ${this.provider}. Supported providers: gemini, openai, claude`);
+        throw new Error(`Unsupported AI provider: ${this.provider}. Supported providers: gemini, openai, claude, groq`);
     }
   }
 
@@ -76,24 +82,41 @@ class AIProcessor {
   }
 
   /**
-   * Process CV text with AI based on schema
+   * Initialize Groq client
    */
-  async processWithSchema(text, schema) {
+  initializeGroq() {
     try {
-      const prompt = this.buildPrompt(text, schema);
-      
+      const Groq = require('groq-sdk');
+      this.client = new Groq({ apiKey: this.apiKey });
+      console.log('Groq client initialized successfully');
+    } catch (error) {
+      throw new Error('Groq SDK not found. Install with: npm install groq-sdk');
+    }
+  }
+
+  /**
+   * Process CV text with AI based on schema and parsing level
+   */
+  async processWithSchema(text, schema, level) {
+    try {
+      // Always use original prompt quality for best results, just optimize compression
+      const prompt = this.buildOptimizedPrompt(text, schema, level);
+
       switch (this.provider) {
         case 'gemini':
         case 'google':
           return await this.processWithGemini(prompt);
-          
+
         case 'openai':
           return await this.processWithOpenAI(prompt);
-          
+
         case 'claude':
         case 'anthropic':
           return await this.processWithClaude(prompt);
-          
+
+        case 'groq':
+          return await this.processWithGroq(prompt);
+
         default:
           throw new Error(`Processing not implemented for provider: ${this.provider}`);
       }
@@ -173,11 +196,34 @@ class AIProcessor {
   }
 
   /**
-   * Build AI prompt based on schema requirements
+   * Process with Groq
    */
-  buildPrompt(text, schema) {
+  async processWithGroq(prompt) {
+    try {
+      console.log('Processing with Groq...');
+      const completion = await this.client.chat.completions.create({
+        model: this.model,
+        messages: [
+          { role: "system", content: "Extract CV data and return valid JSON only." },
+          { role: "user", content: prompt }
+        ],
+        temperature: this.options.temperature || 0.1,
+        max_tokens: 4000
+      });
+
+      const generatedText = completion.choices[0].message.content;
+      return this.parseAIResponse(generatedText);
+    } catch (error) {
+      throw new Error(`Groq processing failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Build original AI prompt (for backward compatibility)
+   */
+  buildOriginalPrompt(text, schema) {
     const schemaFields = this.extractSchemaFields(schema.schema);
-    
+
     return `
 You are a professional CV/Resume parser. Extract the following information from the provided CV text and return it as a valid JSON object.
 
@@ -200,6 +246,205 @@ ${text}
 
 Return only the JSON object:
 `;
+  }
+
+  /**
+   * Build optimized prompt that maintains quality but allows compression
+   */
+  buildOptimizedPrompt(text, schema, level) {
+    // If no level specified, use original behavior
+    if (!level) {
+      const prompt = this.buildOriginalPrompt(text, schema);
+      // Store token info for analysis
+      this.lastPromptInfo = {
+        level: 'original',
+        textLength: text.length,
+        promptLength: prompt.length,
+        estimatedTokens: Math.ceil(prompt.length / 4)
+      };
+      return prompt;
+    }
+
+    // Compress text based on level but keep original prompt quality
+    const compressedText = this.smartCompressText(text, level);
+    const schemaFields = this.extractSchemaFields(schema.schema);
+
+    // Use original prompt structure with compressed text
+    const prompt = `
+You are a professional CV/Resume parser. Extract the following information from the provided CV text and return it as a valid JSON object.
+
+REQUIRED FIELDS TO EXTRACT:
+${this.formatSchemaForPrompt(schemaFields)}
+
+IMPORTANT INSTRUCTIONS:
+1. Extract only the information that is explicitly present in the CV
+2. Return valid JSON format only
+3. Use null for missing optional fields
+4. For dates, use YYYY-MM-DD format or YYYY-MM if day is not specified
+5. For arrays, extract all relevant items
+6. For skills, separate technical skills from soft skills
+7. For experience, include all job positions with as much detail as available
+8. For education, include all educational qualifications
+9. Do not include any explanatory text, only the JSON object
+
+CV TEXT TO PARSE:
+${compressedText}
+
+Return only the JSON object:
+`;
+
+    // Store token info for analysis
+    this.lastPromptInfo = {
+      level: level,
+      originalTextLength: text.length,
+      compressedTextLength: compressedText.length,
+      promptLength: prompt.length,
+      estimatedTokens: Math.ceil(prompt.length / 4),
+      compressionRatio: Math.round((1 - compressedText.length / text.length) * 100)
+    };
+
+    return prompt;
+  }
+
+  /**
+   * Build optimized AI prompt based on schema requirements and parsing level (DEPRECATED)
+   */
+  buildPrompt(text, schema, level = 'moderate') {
+    // For 'ultra' level, use original prompt for best results
+    if (level === 'ultra') {
+      return this.buildOriginalPrompt(text, schema);
+    }
+
+    // Compress text based on parsing level for speed and cost optimization
+    const compressedText = this.compressTextByLevel(text, level);
+    const schemaFields = this.extractSchemaFields(schema.schema);
+
+    // Get level-specific prompt
+    const levelPrompt = this.getLevelPrompt(level, schemaFields);
+
+    return `${levelPrompt}\n\nCV TEXT:\n${compressedText}\n\nReturn JSON:`;
+  }
+
+  /**
+   * Smart text compression that maintains quality
+   */
+  smartCompressText(text, level) {
+    // Clean common redundant content first
+    let cleaned = text
+      .replace(/Page \d+ of \d+/g, '')
+      .replace(/References available upon request/gi, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+
+    switch (level) {
+      case 'low':
+        // Keep enough content for basic info - be less aggressive
+        return cleaned.substring(0, 2000);
+
+      case 'moderate':
+        // Keep good amount for balanced parsing
+        return cleaned.substring(0, 3500);
+
+      case 'high':
+        // Keep most content
+        return cleaned.substring(0, 5000);
+
+      case 'ultra':
+        // Keep everything
+        return cleaned;
+
+      default:
+        // Default to moderate
+        return cleaned.substring(0, 3500);
+    }
+  }
+
+  /**
+   * Old compression method (kept for backward compatibility)
+   */
+  compressTextByLevel(text, level) {
+    switch (level) {
+      case 'low':
+        // Keep first 1200 chars for basic info (increased from 800)
+        return text.substring(0, 1200)
+          .replace(/Page \d+ of \d+/g, '')
+          .replace(/References available upon request/gi, '')
+          .replace(/\s+/g, ' ').trim();
+
+      case 'moderate':
+        // Keep first 2500 chars, remove redundant content (increased from 1500)
+        return text.substring(0, 2500)
+          .replace(/Page \d+ of \d+/g, '')
+          .replace(/References available upon request/gi, '')
+          .replace(/\s+/g, ' ').trim();
+
+      case 'high':
+        // Keep more content but still optimize (increased from 3000)
+        return text.substring(0, 4500)
+          .replace(/Page \d+ of \d+/g, '')
+          .replace(/References available upon request/gi, '')
+          .replace(/\s{2,}/g, ' ').trim();
+
+      case 'ultra':
+        // Full text with minimal compression
+        return text.replace(/\s{3,}/g, ' ').trim();
+
+      default:
+        return text.substring(0, 2500).replace(/\s+/g, ' ').trim();
+    }
+  }
+
+  /**
+   * Get level-specific prompts
+   */
+  getLevelPrompt(level, schemaFields) {
+    switch (level) {
+      case 'low':
+        return `Extract basic CV information as JSON:
+{
+  "personal": {
+    "fullName": "Full Name",
+    "firstName": "First",
+    "lastName": "Last",
+    "email": "email@example.com",
+    "phone": "+1234567890"
+  },
+  "skills": {
+    "technical": ["skill1", "skill2"]
+  }
+}
+
+Instructions:
+- Extract only name, email, phone, and main skills
+- Use exact JSON structure above
+- Use null for missing fields`;
+
+      case 'moderate':
+        return `Extract CV data as structured JSON with these sections:
+- personal: {fullName, firstName, lastName, email, phone, address, linkedIn}
+- experience: [{jobTitle, company, startDate, endDate, location, description}]
+- education: [{institution, degree, fieldOfStudy, startDate, endDate}]
+- skills: {technical: [], soft: []}
+
+Instructions:
+- Follow exact field names shown above
+- Use null for missing fields
+- Return valid JSON only`;
+
+      case 'high':
+        return `Professional CV parser. Extract detailed information in this JSON structure:
+${this.formatSchemaForPrompt(schemaFields)}
+
+Instructions:
+- Extract all available data from CV
+- Use proper field names as shown above
+- Use null for missing fields
+- For dates use YYYY-MM-DD format
+- Return valid JSON only`;
+
+      default:
+        return this.getLevelPrompt('moderate', schemaFields);
+    }
   }
 
   /**
@@ -231,13 +476,17 @@ Return only the JSON object:
   /**
    * Format schema fields for AI prompt
    */
-  formatSchemaForPrompt(fields) {
+  formatSchemaForPrompt(fields, compact = false) {
+    if (compact) {
+      // Compact format for moderate parsing
+      return Object.keys(fields).join(', ');
+    }
+
     let prompt = '';
-    
     Object.entries(fields).forEach(([path, config]) => {
       const required = config.required ? '(REQUIRED)' : '(OPTIONAL)';
       prompt += `- ${path}: ${config.type} ${required}\n`;
-      
+
       if (config.fields) {
         Object.entries(config.fields).forEach(([subKey, subConfig]) => {
           const subRequired = subConfig.required ? '(REQUIRED)' : '(OPTIONAL)';
@@ -245,7 +494,7 @@ Return only the JSON object:
         });
       }
     });
-    
+
     return prompt;
   }
 
@@ -338,21 +587,28 @@ Return only the JSON object:
    */
   static getAvailableProviders() {
     const providers = ['gemini']; // Always available (free)
-    
+
+    try {
+      require('groq-sdk');
+      providers.push('groq');
+    } catch (e) {
+      // Groq not installed
+    }
+
     try {
       require('openai');
       providers.push('openai');
     } catch (e) {
       // OpenAI not installed
     }
-    
+
     try {
       require('@anthropic-ai/sdk');
       providers.push('claude');
     } catch (e) {
       // Anthropic not installed
     }
-    
+
     return providers;
   }
 
@@ -362,11 +618,31 @@ Return only the JSON object:
   static getRecommendedModel(provider) {
     const models = {
       'gemini': 'gemini-1.5-flash',
+      'groq': 'llama3-8b-8192',
       'openai': 'gpt-3.5-turbo',
       'claude': 'claude-3-haiku-20240307'
     };
-    
+
     return models[provider] || models['gemini'];
+  }
+
+  /**
+   * Get token usage information from last prompt
+   */
+  getTokenInfo() {
+    return this.lastPromptInfo || null;
+  }
+
+  /**
+   * Get available parsing levels
+   */
+  static getParsingLevels() {
+    return {
+      'low': { description: 'Basic info only (name, email, phone)', tokens: '~200', speed: 'Fastest' },
+      'moderate': { description: 'Key sections (personal, experience, education, skills)', tokens: '~500', speed: 'Fast' },
+      'high': { description: 'Detailed extraction with descriptions', tokens: '~1000', speed: 'Medium' },
+      'ultra': { description: 'Comprehensive extraction with full details', tokens: '~2000', speed: 'Slower' }
+    };
   }
 }
 

@@ -76,25 +76,64 @@ class DocumentExtractor {
   }
 
   /**
-   * Clean and preprocess extracted text
+   * Clean and preprocess extracted text with performance optimizations
    */
   static preprocessText(extractedData) {
     let text = extractedData.text || '';
-    
-    // Clean up common formatting issues
+
+    // Early return for empty text
+    if (!text || text.length === 0) {
+      return {
+        ...extractedData,
+        text: '',
+        cleanText: '',
+        wordCount: 0,
+        lineCount: 0
+      };
+    }
+
+    // Performance optimization: limit text length early for huge files
+    if (text.length > 50000) {
+      text = text.substring(0, 50000);
+    }
+
+    // Clean up common formatting issues in one pass for better performance
     text = text
       .replace(/\r\n/g, '\n')           // Normalize line endings
       .replace(/\t/g, ' ')              // Replace tabs with spaces
       .replace(/\s{2,}/g, ' ')          // Multiple spaces to single space
       .replace(/\n{3,}/g, '\n\n')       // Multiple newlines to double newline
+      .replace(/Page \d+ of \d+/g, '')  // Remove page numbers
+      .replace(/References available upon request/gi, '') // Remove common footer
       .trim();
+
+    // Fast word and line counting
+    const wordCount = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
+    const lineCount = text ? text.split('\n').length : 0;
 
     return {
       ...extractedData,
       text,
       cleanText: text,
-      wordCount: text.split(/\s+/).length,
-      lineCount: text.split('\n').length
+      wordCount,
+      lineCount,
+      isLarge: text.length > 10000 // Flag for large documents
+    };
+  }
+
+  /**
+   * Fast text extraction for basic info only (performance mode)
+   */
+  static fastExtractBasicInfo(text) {
+    if (!text || text.length === 0) return {};
+
+    // Get first 1000 characters for basic info extraction
+    const snippet = text.substring(0, 1000);
+
+    return {
+      email: snippet.match(/[\w.-]+@[\w.-]+\.\w+/)?.[0] || null,
+      phone: snippet.match(/[\+\d][\d\s\-\(\)]{8,20}\d/)?.[0] || null,
+      name: snippet.split('\n')[0]?.trim() || null
     };
   }
 }
