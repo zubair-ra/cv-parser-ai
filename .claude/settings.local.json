@@ -4,7 +4,14 @@
       "Bash(git checkout:*)",
       "Bash(git add:*)",
       "Bash(git pull:*)",
-      "Bash(npm version:*)"
+      "Bash(npm version:*)",
+      "Bash(npm publish:*)",
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(npm view:*)",
+      "Bash(npm update:*)",
+      "Read(//c/Users/Lenovo/Downloads/**)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
