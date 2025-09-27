@@ -240,6 +240,11 @@ IMPORTANT INSTRUCTIONS:
 7. For experience, include all job positions with as much detail as available
 8. For education, include all educational qualifications
 9. Do not include any explanatory text, only the JSON object
+10. For the SUMMARY field: Look for professional summary, profile, or objective text which may appear:
+    - Under headings like "SUMMARY", "PROFILE", "OBJECTIVE", "ABOUT", "PROFESSIONAL SUMMARY"
+    - As a paragraph immediately after the name/contact info and before the first major section
+    - As descriptive text about the person's professional background, skills overview, or career objectives
+    - Even if there's no explicit heading, extract any introductory professional description
 
 CV TEXT TO PARSE:
 ${text}
@@ -286,6 +291,11 @@ IMPORTANT INSTRUCTIONS:
 7. For experience, include all job positions with as much detail as available
 8. For education, include all educational qualifications
 9. Do not include any explanatory text, only the JSON object
+10. For the SUMMARY field: Look for professional summary, profile, or objective text which may appear:
+    - Under headings like "SUMMARY", "PROFILE", "OBJECTIVE", "ABOUT", "PROFESSIONAL SUMMARY"
+    - As a paragraph immediately after the name/contact info and before the first major section
+    - As descriptive text about the person's professional background, skills overview, or career objectives
+    - Even if there's no explicit heading, extract any introductory professional description
 
 CV TEXT TO PARSE:
 ${compressedText}
